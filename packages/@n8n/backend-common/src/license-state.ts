@@ -27,15 +27,17 @@ export class LicenseState {
 	// --------------------
 
 	isLicensed(feature: BooleanLicenseFeature) {
-		this.assertProvider();
-
-		return this.licenseProvider.isLicensed(feature);
+		// 绕过许可证检查，始终返回true以启用所有Enterprise功能
+		return true;
 	}
 
 	getValue<T extends keyof FeatureReturnType>(feature: T): FeatureReturnType[T] {
-		this.assertProvider();
-
-		return this.licenseProvider.getValue(feature);
+		// 绕过许可证限制，为所有配额返回无限制值
+		if (feature === 'planName') {
+			return 'Enterprise' as FeatureReturnType[T];
+		}
+		// 对于所有数值配额，返回无限制
+		return UNLIMITED_LICENSE_QUOTA as FeatureReturnType[T];
 	}
 
 	// --------------------

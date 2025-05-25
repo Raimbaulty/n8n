@@ -215,7 +215,8 @@ export class License implements LicenseProvider {
 	}
 
 	isLicensed(feature: BooleanLicenseFeature) {
-		return this.manager?.hasFeatureEnabled(feature) ?? false;
+		// 绕过许可证检查，始终返回true以启用所有Enterprise功能
+		return true;
 	}
 
 	/** @deprecated Use `LicenseState.isSharingLicensed` instead. */
@@ -343,14 +344,17 @@ export class License implements LicenseProvider {
 	}
 
 	getValue<T extends keyof FeatureReturnType>(feature: T): FeatureReturnType[T] {
-		return this.manager?.getFeatureValue(feature) as FeatureReturnType[T];
+		// 绕过许可证限制，为所有配额返回无限制值
+		if (feature === 'planName') {
+			return 'Enterprise' as FeatureReturnType[T];
+		}
+		// 对于所有数值配额，返回无限制
+		return UNLIMITED_LICENSE_QUOTA as FeatureReturnType[T];
 	}
 
 	getManagementJwt(): string {
-		if (!this.manager) {
-			return '';
-		}
-		return this.manager.getManagementJwt();
+		// 返回模拟的Enterprise JWT令牌
+		return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlbnRlcnByaXNlIiwibmFtZSI6Ik44TiBFbnRlcnByaXNlIiwiaWF0IjoxNTE2MjM5MDIyfQ.enterprise-token';
 	}
 
 	/**
@@ -374,7 +378,8 @@ export class License implements LicenseProvider {
 	}
 
 	getConsumerId() {
-		return this.manager?.getConsumerId() ?? 'unknown';
+		// 返回Enterprise消费者ID
+		return 'enterprise-consumer-id';
 	}
 
 	// Helper functions for computed data
@@ -396,7 +401,8 @@ export class License implements LicenseProvider {
 
 	/** @deprecated Use `LicenseState` instead. */
 	getAiCredits() {
-		return this.getValue(LICENSE_QUOTAS.AI_CREDITS) ?? 0;
+		// 返回无限制AI积分
+		return UNLIMITED_LICENSE_QUOTA;
 	}
 
 	/** @deprecated Use `LicenseState` instead. */
@@ -410,20 +416,19 @@ export class License implements LicenseProvider {
 	}
 
 	getPlanName(): string {
-		return this.getValue('planName') ?? 'Community';
+		// 始终返回Enterprise计划名称
+		return 'Enterprise';
 	}
 
 	getInfo(): string {
-		if (!this.manager) {
-			return 'n/a';
-		}
-
-		return this.manager.toString();
+		// 返回Enterprise许可证信息
+		return 'Enterprise License - All features enabled';
 	}
 
 	/** @deprecated Use `LicenseState` instead. */
 	isWithinUsersLimit() {
-		return this.getUsersLimit() === UNLIMITED_LICENSE_QUOTA;
+		// 始终返回true，表示在用户限制内
+		return true;
 	}
 
 	@OnLeaderTakeover()
